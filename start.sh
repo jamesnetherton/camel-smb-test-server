@@ -41,10 +41,34 @@ fi
 echo "Setting ownership of /data/rw..."
 chown -Rv camel /data/rw
 
-echo "Starting nmbd daemon..."
-nmbd --foreground --no-process-group --debuglevel=3 &
-NMBD_PID=$!
-echo "nmbd started with PID: $NMBD_PID"
+echo "Starting SMB daemons..."
+nmbd -D
+smbd -D -s /etc/samba/smb.conf
 
-echo "Starting smbd daemon..."
-exec smbd --foreground --no-process-group --debuglevel=3 -s /etc/samba/smb.conf
+# Give daemons a moment to start
+sleep 2
+
+# Check if they're running
+if pgrep -x nmbd > /dev/null; then
+	echo "✓ nmbd is running"
+else
+	echo "✗ nmbd is NOT running"
+	nmbd --foreground --no-process-group --debuglevel=5 -s /etc/samba/smb.conf 2>&1 &
+	sleep 5
+	exit 1
+fi
+
+if pgrep -x smbd > /dev/null; then
+	echo "✓ smbd is running"
+else
+	echo "✗ smbd is NOT running - trying foreground mode for debugging"
+	smbd --foreground --no-process-group --debuglevel=5 -s /etc/samba/smb.conf 2>&1
+	exit 1
+fi
+
+echo "✅ SMB server is ready"
+
+# Keep container running
+while true; do
+	sleep 10
+done
