@@ -32,6 +32,11 @@ jobs:
           load: true
           tags: camel-smb-test-server:test
 
+      - name: Install SMB client
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y smbclient
+
       - name: Start SMB container
         run: |
           docker run -d \
@@ -40,17 +45,24 @@ jobs:
             -p 139:139 \
             camel-smb-test-server:test
 
-          # Wait for SMB server to be ready
-          echo "Waiting for SMB server to start..."
-          sleep 15
+          # Wait for SMB server to be ready with retry logic
+          echo "Waiting for SMB server to be ready..."
+          for i in {1..30}; do
+            echo "Attempt $i: Testing SMB connection..."
+            if smbclient -L localhost -U camel%camelTester123 -N 2>/dev/null; then
+              echo "✅ SMB server is ready!"
+              break
+            fi
+            if [ $i -eq 30 ]; then
+              echo "❌ SMB server failed to start after 30 attempts"
+              docker logs smb-test
+              exit 1
+            fi
+            sleep 2
+          done
 
           # Check container is running
           docker ps | grep smb-test
-
-      - name: Install SMB client
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y smbclient
 
       - name: Test SMB connection and file operations
         run: |
