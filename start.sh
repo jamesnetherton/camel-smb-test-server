@@ -26,13 +26,55 @@ for file in $(seq 1 100) ; do
 	echo ${RANDOM} > /data/ro/${file}.txt ;
 done
 
+echo "Creating user camel..."
 useradd camel
-printf "camelTester123\ncamelTester123\n" | smbpasswd -s -a camel
 
+echo "Setting SMB password for camel..."
+printf "camelTester123\ncamelTester123\n" | smbpasswd -s -a camel
+if [ $? -eq 0 ]; then
+	echo "SMB password set successfully"
+else
+	echo "ERROR: Failed to set SMB password"
+	exit 1
+fi
+
+echo "Setting ownership of /data/rw..."
 chown -Rv camel /data/rw
 
+echo "Starting nmbd daemon..."
 nmbd -D
-smbd -D -s /etc/samba/smb.conf
+if [ $? -eq 0 ]; then
+	echo "nmbd started successfully"
+else
+	echo "ERROR: nmbd failed to start"
+fi
+
+echo "Starting smbd daemon..."
+smbd -D -s /etc/samba/smb.conf --debuglevel=3
+if [ $? -eq 0 ]; then
+	echo "smbd started successfully"
+else
+	echo "ERROR: smbd failed to start"
+fi
+
+# Wait a moment for daemons to initialize
+sleep 3
+
+# Verify daemons are running
+echo "Verifying daemons..."
+if pgrep -x nmbd > /dev/null; then
+	echo "✓ nmbd is running (PID: $(pgrep -x nmbd))"
+else
+	echo "✗ nmbd is NOT running"
+fi
+
+if pgrep -x smbd > /dev/null; then
+	echo "✓ smbd is running (PID: $(pgrep -x smbd))"
+else
+	echo "✗ smbd is NOT running"
+fi
+
+echo "SMB server initialization complete"
 
 while true ; do
 	sleep 10
