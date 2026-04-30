@@ -45,20 +45,24 @@ jobs:
             -p 139:139 \
             camel-smb-test-server:test
 
+          # Give the container initial time to start
+          echo "Waiting for container to initialize..."
+          sleep 10
+
           # Wait for SMB server to be ready with retry logic
-          echo "Waiting for SMB server to be ready..."
-          for i in {1..30}; do
+          echo "Waiting for SMB authentication to be ready..."
+          for i in {1..40}; do
             echo "Attempt $i: Testing SMB connection..."
             if smbclient -L localhost -U camel%camelTester123 -N 2>/dev/null; then
               echo "✅ SMB server is ready!"
               break
             fi
-            if [ $i -eq 30 ]; then
-              echo "❌ SMB server failed to start after 30 attempts"
+            if [ $i -eq 40 ]; then
+              echo "❌ SMB server failed to start after 40 attempts"
               docker logs smb-test
               exit 1
             fi
-            sleep 2
+            sleep 3
           done
 
           # Check container is running
