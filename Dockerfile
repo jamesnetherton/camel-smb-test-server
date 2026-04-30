@@ -15,10 +15,10 @@
 # limitations under the License.
 #
 
-FROM fedora:38 as samba
+FROM fedora:44 as samba
 ENV SAMBA_ROOT /opt/camel/samba
 EXPOSE 139 445
 ADD smb.conf /etc/samba/smb.conf
 ADD start.sh /usr/local/bin
-RUN dnf install -y --setopt=tsflags=noman --setopt=install_weak_deps=False samba && mkdir -p /data/rw /data/ro && chmod +x /usr/local/bin/start.sh && dnf clean all
+RUN dnf install -y --setopt=tsflags=nodocs --setopt=install_weak_deps=False samba && mkdir -p /data/rw /data/ro && chmod +x /usr/local/bin/start.sh && dnf clean all
 CMD /usr/local/bin/start.sh
