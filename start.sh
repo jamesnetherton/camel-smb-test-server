@@ -27,8 +27,7 @@ for file in $(seq 1 100) ; do
 done
 
 echo "Creating user and groups..."
-groupadd -g 513 "Domain Users" || true
-useradd camel -G "Domain Users"
+useradd camel
 
 echo "Setting SMB password for camel..."
 printf "camelTester123\ncamelTester123\n" | smbpasswd -s -a camel
