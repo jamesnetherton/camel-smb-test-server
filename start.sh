@@ -42,40 +42,9 @@ echo "Setting ownership of /data/rw..."
 chown -Rv camel /data/rw
 
 echo "Starting nmbd daemon..."
-nmbd -D
-if [ $? -eq 0 ]; then
-	echo "nmbd started successfully"
-else
-	echo "ERROR: nmbd failed to start"
-fi
+nmbd --foreground --no-process-group --debuglevel=3 &
+NMBD_PID=$!
+echo "nmbd started with PID: $NMBD_PID"
 
 echo "Starting smbd daemon..."
-smbd -D -s /etc/samba/smb.conf --debuglevel=3
-if [ $? -eq 0 ]; then
-	echo "smbd started successfully"
-else
-	echo "ERROR: smbd failed to start"
-fi
-
-# Wait a moment for daemons to initialize
-sleep 3
-
-# Verify daemons are running
-echo "Verifying daemons..."
-if pgrep -x nmbd > /dev/null; then
-	echo "✓ nmbd is running (PID: $(pgrep -x nmbd))"
-else
-	echo "✗ nmbd is NOT running"
-fi
-
-if pgrep -x smbd > /dev/null; then
-	echo "✓ smbd is running (PID: $(pgrep -x smbd))"
-else
-	echo "✗ smbd is NOT running"
-fi
-
-echo "SMB server initialization complete"
-
-while true ; do
-	sleep 10
-done
+exec smbd --foreground --no-process-group --debuglevel=3 -s /etc/samba/smb.conf
