@@ -27,12 +27,15 @@ for file in $(seq 1 100) ; do
 done
 
 echo "Creating user and groups..."
-useradd camel
+useradd -M -s /sbin/nologin camel
 
 echo "Setting SMB password for camel..."
-printf "camelTester123\ncamelTester123\n" | smbpasswd -s -a camel
+(echo "camelTester123"; echo "camelTester123") | smbpasswd -s -a camel
 if [ $? -eq 0 ]; then
 	echo "SMB password set successfully"
+	# Explicitly enable the user
+	smbpasswd -e camel
+	echo "SMB user enabled"
 else
 	echo "ERROR: Failed to set SMB password"
 	exit 1
@@ -40,6 +43,11 @@ fi
 
 echo "Setting ownership of /data/rw..."
 chown -Rv camel /data/rw
+
+echo "Verifying Samba configuration..."
+testparm -s /etc/samba/smb.conf 2>&1 | head -20
+echo "Verifying Samba users..."
+pdbedit -L
 
 echo "Starting SMB daemons..."
 nmbd -D
@@ -67,6 +75,8 @@ else
 fi
 
 echo "✅ SMB server is ready"
+echo
+echo "This server is intended for testing only. It is NOT FOR PRODUCTION USE!"
 
 # Keep container running
 while true; do
