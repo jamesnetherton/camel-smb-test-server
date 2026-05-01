@@ -16,6 +16,10 @@
 # limitations under the License.
 #
 
+# Configure SMB credentials from environment variables
+SMB_USER="${SMB_USER:-camel}"
+SMB_PASSWORD="${SMB_PASSWORD:-camelTester123}"
+
 echo "Creating read-writable files"
 for file in $(seq 1 100) ; do
 	echo ${RANDOM} > /data/rw/${file}.txt ;
@@ -27,14 +31,14 @@ for file in $(seq 1 100) ; do
 done
 
 echo "Creating user and groups..."
-useradd -M -s /sbin/nologin camel
+useradd -M -s /sbin/nologin "${SMB_USER}"
 
-echo "Setting SMB password for camel..."
-(echo "camelTester123"; echo "camelTester123") | smbpasswd -s -a camel
+echo "Setting SMB password for ${SMB_USER}..."
+(echo "${SMB_PASSWORD}"; echo "${SMB_PASSWORD}") | smbpasswd -s -a "${SMB_USER}"
 if [ $? -eq 0 ]; then
 	echo "SMB password set successfully"
 	# Explicitly enable the user
-	smbpasswd -e camel
+	smbpasswd -e "${SMB_USER}"
 	echo "SMB user enabled"
 else
 	echo "ERROR: Failed to set SMB password"
@@ -42,7 +46,10 @@ else
 fi
 
 echo "Setting ownership of /data/rw..."
-chown -Rv camel /data/rw
+chown -Rv "${SMB_USER}" /data/rw
+
+echo "Configuring Samba shares for user ${SMB_USER}..."
+sed -i "s/valid users = .*/valid users = ${SMB_USER}/g" /etc/samba/smb.conf
 
 echo "Verifying Samba configuration..."
 testparm -s /etc/samba/smb.conf 2>&1
@@ -80,10 +87,16 @@ echo
 echo "=================================================="
 echo "⚠️  WARNING: TEST SERVER - NOT FOR PRODUCTION  ⚠️"
 echo "=================================================="
-echo "This server has HARDCODED credentials:"
-echo "  Username: camel"
-echo "  Password: camelTester123"
+echo "SMB Server Credentials:"
+echo "  Username: ${SMB_USER}"
+echo "  Password: ${SMB_PASSWORD}"
 echo
+if [ "${SMB_USER}" = "camel" ] && [ "${SMB_PASSWORD}" = "camelTester123" ]; then
+	echo "⚠️  Using DEFAULT credentials!"
+	echo "   Set SMB_USER and SMB_PASSWORD environment"
+	echo "   variables to use custom credentials."
+	echo
+fi
 echo "DO NOT expose this server to the internet!"
 echo "DO NOT use this in production!"
 echo "DO NOT store sensitive data on this server!"

@@ -6,10 +6,11 @@ This SMB server is designed **exclusively** for integration testing purposes. It
 
 ## Security Notice
 
+**Default Credentials** (if not overridden):
 - **Username**: `camel`
 - **Password**: `camelTester123`
 
-These credentials are **publicly visible** in this repository and **hardcoded** in the container. Anyone with network access to this server can authenticate using these credentials.
+⚠️ **IMPORTANT**: The default credentials are publicly known. For any deployment (even test environments), you should **set custom credentials** using environment variables.
 
 ### ❌ DO NOT:
 - Deploy this to production
@@ -33,6 +34,32 @@ This container provides an SMB/CIFS server for testing Apache Camel SMB componen
 
 ## Usage
 
+### With Custom Credentials (Recommended)
+
+```bash
+docker run -d \
+  --name smb-test \
+  -p 445:445 \
+  -p 139:139 \
+  -e SMB_USER=myuser \
+  -e SMB_PASSWORD=mySecurePassword123 \
+  quay.io/jamesnetherton/camel-smb-test-server:latest
+```
+
+Connect to shares:
+```bash
+# List shares
+smbclient -L localhost -U myuser%mySecurePassword123
+
+# Access read-write share
+smbclient //localhost/data-rw -U myuser%mySecurePassword123
+
+# Access read-only share
+smbclient //localhost/data-ro -U myuser%mySecurePassword123
+```
+
+### With Default Credentials (Quick Testing Only)
+
 ```bash
 docker run -d \
   --name smb-test \
@@ -41,17 +68,17 @@ docker run -d \
   quay.io/jamesnetherton/camel-smb-test-server:latest
 ```
 
-Connect to shares:
+Connect with default credentials:
 ```bash
-# List shares
 smbclient -L localhost -U camel%camelTester123
-
-# Access read-write share
-smbclient //localhost/data-rw -U camel%camelTester123
-
-# Access read-only share
-smbclient //localhost/data-ro -U camel%camelTester123
 ```
+
+### Environment Variables
+
+- `SMB_USER`: SMB username (default: `camel`)
+- `SMB_PASSWORD`: SMB password (default: `camelTester123`)
+
+**Note**: Set both or neither. If you only set one, the behavior is undefined.
 
 ## Shares
 

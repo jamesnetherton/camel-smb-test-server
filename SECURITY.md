@@ -6,20 +6,23 @@ This SMB server contains **hardcoded credentials** and is designed **exclusively
 
 ## Known Security Issues (By Design)
 
-1. **Hardcoded Credentials**
-   - Username: `camel`
-   - Password: `camelTester123`
-   - These are publicly visible in the source code
+1. **Default Credentials Are Publicly Known**
+   - Default Username: `camel`
+   - Default Password: `camelTester123`
+   - These defaults are publicly visible in the source code
+   - **Mitigation**: Use `SMB_USER` and `SMB_PASSWORD` environment variables to set custom credentials
 
 2. **No Authentication Strength**
    - Basic NTLM authentication
    - No certificate validation
    - No encryption beyond SMB3 defaults
+   - No multi-factor authentication
 
 3. **No Access Controls**
-   - Anyone with network access can authenticate
+   - Anyone with valid credentials can authenticate
    - No rate limiting
    - No audit logging
+   - No IP allowlisting
 
 ## Intended Use Cases
 
@@ -48,11 +51,34 @@ Please open an issue in the GitHub repository.
 
 ## Recommendations for Safe Testing
 
-1. **Network Isolation**: Run in isolated Docker networks or private VLANs
-2. **Firewall Rules**: Block ports 139 and 445 from external access
-3. **Temporary Deployment**: Spin up for tests, tear down immediately after
-4. **No Sensitive Data**: Never use real data with this server
-5. **Monitor Usage**: If running in a shared environment, monitor for unauthorized access
+1. **Use Custom Credentials**: Always set `SMB_USER` and `SMB_PASSWORD` environment variables
+   ```bash
+   docker run -e SMB_USER=testuser -e SMB_PASSWORD=$(openssl rand -base64 16) ...
+   ```
+
+2. **Network Isolation**: Run in isolated Docker networks or private VLANs
+   ```bash
+   docker network create smb-test-net
+   docker run --network smb-test-net ...
+   ```
+
+3. **Firewall Rules**: Block ports 139 and 445 from external access
+
+4. **Temporary Deployment**: Spin up for tests, tear down immediately after
+   ```bash
+   docker run --rm ...  # Auto-remove on exit
+   ```
+
+5. **No Sensitive Data**: Never use real data with this server
+
+6. **Monitor Usage**: If running in a shared environment, monitor for unauthorized access
+
+7. **Use Secrets Management**: In CI/CD, store credentials in secrets
+   ```yaml
+   env:
+     SMB_USER: ${{ secrets.SMB_TEST_USER }}
+     SMB_PASSWORD: ${{ secrets.SMB_TEST_PASSWORD }}
+   ```
 
 ## Alternative for Production
 
