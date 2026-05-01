@@ -45,9 +45,10 @@ echo "Setting ownership of /data/rw..."
 chown -Rv camel /data/rw
 
 echo "Verifying Samba configuration..."
-testparm -s /etc/samba/smb.conf 2>&1 | head -20
+testparm -s /etc/samba/smb.conf 2>&1
+echo ""
 echo "Verifying Samba users..."
-pdbedit -L
+pdbedit -L -v
 
 echo "Starting SMB daemons..."
 nmbd -D
