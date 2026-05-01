@@ -17,8 +17,21 @@
 #
 
 # Configure SMB credentials from environment variables
-SMB_USER="${SMB_USER:-camel}"
-SMB_PASSWORD="${SMB_PASSWORD:-camelTester123}"
+# These MUST be provided - no defaults for security
+if [ -z "${SMB_USER}" ] || [ -z "${SMB_PASSWORD}" ]; then
+	echo "ERROR: SMB credentials not provided!"
+	echo ""
+	echo "You must set both SMB_USER and SMB_PASSWORD environment variables."
+	echo ""
+	echo "Example:"
+	echo "  docker run -e SMB_USER=testuser -e SMB_PASSWORD=secret123 ..."
+	echo ""
+	echo "For security reasons, this server does NOT have default credentials."
+	exit 1
+fi
+
+SMB_USER="${SMB_USER}"
+SMB_PASSWORD="${SMB_PASSWORD}"
 
 echo "Creating read-writable files"
 for file in $(seq 1 100) ; do
@@ -89,14 +102,8 @@ echo "⚠️  WARNING: TEST SERVER - NOT FOR PRODUCTION  ⚠️"
 echo "=================================================="
 echo "SMB Server Credentials:"
 echo "  Username: ${SMB_USER}"
-echo "  Password: ${SMB_PASSWORD}"
+echo "  Password: ********"
 echo
-if [ "${SMB_USER}" = "camel" ] && [ "${SMB_PASSWORD}" = "camelTester123" ]; then
-	echo "⚠️  Using DEFAULT credentials!"
-	echo "   Set SMB_USER and SMB_PASSWORD environment"
-	echo "   variables to use custom credentials."
-	echo
-fi
 echo "DO NOT expose this server to the internet!"
 echo "DO NOT use this in production!"
 echo "DO NOT store sensitive data on this server!"

@@ -6,11 +6,13 @@ This SMB server is designed **exclusively** for integration testing purposes. It
 
 ## Security Notice
 
-**Default Credentials** (if not overridden):
-- **Username**: `camel`
-- **Password**: `camelTester123`
+⚠️ **REQUIRED**: You **must** provide credentials via environment variables. This container has **no default credentials** for security reasons.
 
-⚠️ **IMPORTANT**: The default credentials are publicly known. For any deployment (even test environments), you should **set custom credentials** using environment variables.
+**Required Environment Variables**:
+- `SMB_USER` - The SMB username
+- `SMB_PASSWORD` - The SMB password
+
+The container will refuse to start without both variables set.
 
 ### ❌ DO NOT:
 - Deploy this to production
@@ -34,14 +36,16 @@ This container provides an SMB/CIFS server for testing Apache Camel SMB componen
 
 ## Usage
 
-### With Custom Credentials (Recommended)
+**⚠️ IMPORTANT**: You must provide credentials - the container will not start without them.
+
+### Basic Usage
 
 ```bash
 docker run -d \
   --name smb-test \
   -p 445:445 \
   -p 139:139 \
-  -e SMB_USER=myuser \
+  -e SMB_USER=testuser \
   -e SMB_PASSWORD=mySecurePassword123 \
   quay.io/jamesnetherton/camel-smb-test-server:latest
 ```
@@ -49,36 +53,37 @@ docker run -d \
 Connect to shares:
 ```bash
 # List shares
-smbclient -L localhost -U myuser%mySecurePassword123
+smbclient -L localhost -U testuser%mySecurePassword123
 
 # Access read-write share
-smbclient //localhost/data-rw -U myuser%mySecurePassword123
+smbclient //localhost/data-rw -U testuser%mySecurePassword123
 
 # Access read-only share
-smbclient //localhost/data-ro -U myuser%mySecurePassword123
+smbclient //localhost/data-ro -U testuser%mySecurePassword123
 ```
 
-### With Default Credentials (Quick Testing Only)
+### Environment Variables (Required)
+
+- `SMB_USER`: SMB username (no default - **required**)
+- `SMB_PASSWORD`: SMB password (no default - **required**)
+
+**Note**: Both variables must be set or the container will exit with an error.
+
+### Generate Secure Password
 
 ```bash
+# Generate a random password
+PASSWORD=$(openssl rand -base64 16)
+
+# Run with generated password
 docker run -d \
-  --name smb-test \
-  -p 445:445 \
-  -p 139:139 \
+  -e SMB_USER=testuser \
+  -e SMB_PASSWORD=$PASSWORD \
+  -p 445:445 -p 139:139 \
   quay.io/jamesnetherton/camel-smb-test-server:latest
+
+echo "Password: $PASSWORD"
 ```
-
-Connect with default credentials:
-```bash
-smbclient -L localhost -U camel%camelTester123
-```
-
-### Environment Variables
-
-- `SMB_USER`: SMB username (default: `camel`)
-- `SMB_PASSWORD`: SMB password (default: `camelTester123`)
-
-**Note**: Set both or neither. If you only set one, the behavior is undefined.
 
 ## Shares
 

@@ -6,23 +6,25 @@ This SMB server contains **hardcoded credentials** and is designed **exclusively
 
 ## Known Security Issues (By Design)
 
-1. **Default Credentials Are Publicly Known**
-   - Default Username: `camel`
-   - Default Password: `camelTester123`
-   - These defaults are publicly visible in the source code
-   - **Mitigation**: Use `SMB_USER` and `SMB_PASSWORD` environment variables to set custom credentials
+1. **No Default Credentials (Security Feature)**
+   - ✅ This container **requires** credentials to be provided
+   - ✅ No publicly known default credentials
+   - Container will refuse to start without `SMB_USER` and `SMB_PASSWORD` set
+   - Users must explicitly choose credentials for their environment
 
 2. **No Authentication Strength**
    - Basic NTLM authentication
    - No certificate validation
    - No encryption beyond SMB3 defaults
    - No multi-factor authentication
+   - No password complexity requirements
 
 3. **No Access Controls**
    - Anyone with valid credentials can authenticate
    - No rate limiting
    - No audit logging
    - No IP allowlisting
+   - Single user only (the configured SMB_USER)
 
 ## Intended Use Cases
 
@@ -51,9 +53,12 @@ Please open an issue in the GitHub repository.
 
 ## Recommendations for Safe Testing
 
-1. **Use Custom Credentials**: Always set `SMB_USER` and `SMB_PASSWORD` environment variables
+1. **Use Strong Credentials**: Generate random passwords for each deployment
    ```bash
-   docker run -e SMB_USER=testuser -e SMB_PASSWORD=$(openssl rand -base64 16) ...
+   docker run \
+     -e SMB_USER=testuser \
+     -e SMB_PASSWORD=$(openssl rand -base64 16) \
+     ...
    ```
 
 2. **Network Isolation**: Run in isolated Docker networks or private VLANs

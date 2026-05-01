@@ -43,6 +43,8 @@ jobs:
             --name smb-test \
             -p 445:445 \
             -p 139:139 \
+            -e SMB_USER=testuser \
+            -e SMB_PASSWORD=testPassword123 \
             camel-smb-test-server:test
 
           # Give the container initial time to start
@@ -53,7 +55,7 @@ jobs:
           echo "Waiting for SMB authentication to be ready..."
           for i in {1..40}; do
             echo "Attempt $i: Testing SMB connection..."
-            if smbclient -L localhost -U camel%camelTester123 2>/dev/null; then
+            if smbclient -L localhost -U testuser%testPassword123 2>/dev/null; then
               echo "✅ SMB server is ready!"
               break
             fi
@@ -72,28 +74,28 @@ jobs:
         run: |
           # Test listing shares
           echo "Testing SMB share listing..."
-          smbclient -L localhost -U camel%camelTester123
+          smbclient -L localhost -U testuser%testPassword123
 
           # Create a test file
           echo "Test content from GitHub Actions" > test-upload.txt
 
           # Test upload to read-write share
           echo "Testing file upload to read-write share..."
-          smbclient //localhost/data-rw -U camel%camelTester123 -c "put test-upload.txt test-from-ci.txt"
+          smbclient //localhost/data-rw -U testuser%testPassword123 -c "put test-upload.txt test-from-ci.txt"
 
           # Test download from read-write share (one of the pre-created files)
           echo "Testing file download from read-write share..."
-          smbclient //localhost/data-rw -U camel%camelTester123 -c "get 1.txt downloaded-rw.txt"
+          smbclient //localhost/data-rw -U testuser%testPassword123 -c "get 1.txt downloaded-rw.txt"
           cat downloaded-rw.txt
 
           # Test download from read-only share
           echo "Testing file download from read-only share..."
-          smbclient //localhost/data-ro -U camel%camelTester123 -c "get 1.txt downloaded-ro.txt"
+          smbclient //localhost/data-ro -U testuser%testPassword123 -c "get 1.txt downloaded-ro.txt"
           cat downloaded-ro.txt
 
           # Verify upload worked
           echo "Verifying uploaded file..."
-          smbclient //localhost/data-rw -U camel%camelTester123 -c "get test-from-ci.txt verify.txt"
+          smbclient //localhost/data-rw -U testuser%testPassword123 -c "get test-from-ci.txt verify.txt"
           cat verify.txt
 
           echo "✅ All SMB tests passed!"
