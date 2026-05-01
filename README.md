@@ -14,19 +14,6 @@ This SMB server is designed **exclusively** for integration testing purposes. It
 
 The container will refuse to start without both variables set.
 
-### ❌ DO NOT:
-- Deploy this to production
-- Expose this server to the internet
-- Store sensitive data on this server
-- Use this in any untrusted network
-- Leave this running indefinitely
-
-### ✅ Safe Usage:
-- CI/CD testing pipelines (isolated)
-- Local development/testing
-- Temporary integration test environments
-- Network-isolated test labs
-
 ## Purpose
 
 This container provides an SMB/CIFS server for testing Apache Camel SMB component integration. It includes:
@@ -48,18 +35,6 @@ docker run -d \
   -e SMB_USER=testuser \
   -e SMB_PASSWORD=mySecurePassword123 \
   quay.io/jamesnetherton/camel-smb-test-server:latest
-```
-
-Connect to shares:
-```bash
-# List shares
-smbclient -L localhost -U testuser%mySecurePassword123
-
-# Access read-write share
-smbclient //localhost/data-rw -U testuser%mySecurePassword123
-
-# Access read-only share
-smbclient //localhost/data-ro -U testuser%mySecurePassword123
 ```
 
 ### Environment Variables (Required)
@@ -95,7 +70,3 @@ echo "Password: $PASSWORD"
 ```bash
 docker build -t smb-test-server .
 ```
-
-## License
-
-Apache License 2.0
