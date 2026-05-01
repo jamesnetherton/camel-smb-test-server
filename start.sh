@@ -77,7 +77,18 @@ fi
 
 echo "✅ SMB server is ready"
 echo
-echo "This server is intended for testing only. It is NOT FOR PRODUCTION USE!"
+echo "=================================================="
+echo "⚠️  WARNING: TEST SERVER - NOT FOR PRODUCTION  ⚠️"
+echo "=================================================="
+echo "This server has HARDCODED credentials:"
+echo "  Username: camel"
+echo "  Password: camelTester123"
+echo
+echo "DO NOT expose this server to the internet!"
+echo "DO NOT use this in production!"
+echo "DO NOT store sensitive data on this server!"
+echo "=================================================="
+echo
 
 # Keep container running
 while true; do
